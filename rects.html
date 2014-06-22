@@ -1,0 +1,54 @@
+<!doctype html>
+<title>Rectangle masking</title>
+<style>
+canvas { border: 1px solid #666; }
+</style>
+
+<canvas width=500 height=500 id=canvas></canvas>
+<canvas width=500 height=500 id=canvas2></canvas>
+<p>
+Numbers of zones:
+<select id=zones onchange="main()">
+<option value=0>0
+<option value=1>1
+<option value=2>2
+<option value=3 selected>3
+<option value=4>4
+<option value=5>5
+<option value=6>6
+<option value=7>7
+</select>
+
+<p> Merge redundant masks <input type=checkbox id=merge checked onclick="main()"> 
+
+<script src="rects.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/2.36.0/codemirror.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/2.36.0/runmode.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/2.36.0/javascript.js"></script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/2.36.0/codemirror.css">
+
+<style>
+#code { background: #eee; border-radius: 20px; padding: 10px; width: 700px;}
+</style>
+
+<pre id=code class="cm-s-default"></pre>
+<script>
+  function showCode(full) {
+    req = new XMLHttpRequest();
+    req.onreadystatechange = function(){  
+      if (req.readyState === 4) { 
+        code = req.responseText;
+        if (!full) {
+          code = code.replace(/[\s\S]*-- Masking --.*[\S\s]/,'');
+          code = code.replace(/.*----[\s\S]*/,'');
+        }
+        CodeMirror.runMode(code, "javascript", document.getElementById("code"));
+      } else { console.log('ajax fail' + req.readyState); }
+    };
+    req.open('GET', 'rects.js', true);    
+    req.send();
+  }
+showCode(false);
+</script>
+
+<p><a href="#" onclick="showCode(true); return false;">show boring bits</a>
