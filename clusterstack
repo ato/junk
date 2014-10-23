@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+#
+# Quick and dirty Java thread dump clusterer
+#
+# Groups thread dump output by identical stack trace
+
+import sys
+
+if len(sys.argv) > 1:
+  sys.stdin = open(sys.argv[1])
+traces = {}
+
+for line in sys.stdin:
+  line = line.replace('\t', ' ' * 8)
+  if not line.startswith(' '):
+    name = line.strip()
+    trace = []
+    for line in sys.stdin:
+      line = line[:-1]
+      if ': ' not in line:
+        state = ''
+        if '- parking' in line or '- locked' in line or '- waiting' in line or 'owned by' in line: break
+        trace = [line]
+        break
+      state = line.split(': ')[1]
+      break
+    for line in sys.stdin:
+      line = line[:-1]
+      if not line: break
+      if '- parking' in line or '- locked' in line or '- waiting' in line or 'owned by' in line: continue
+      trace.append(line)
+
+    h = tuple(trace)
+    names = traces.get(h, [])
+    names.append(state + ' ' + name)
+    traces[h] = names
+
+for _, k, v in sorted([(-len(v), k, v) for k, v in traces.iteritems()]):
+  for line in v:
+          if 'RUNNABLE' in line:
+            print "\033[1;32m" + line + "\033[0;0m"
+          else:
+            print "\033[1;33m" + line + "\033[0;0m"
+  for line in k:
+          line = line.replace('\t','        ')
+          strip = line.strip()
+          if strip.startswith('at java.') or strip.startswith('at javax.') or strip.startswith('at org.mortbay') or strip.startswith('at org.restlet') or strip.startswith('at sun.') or strip.startswith('at org.eclipse.jetty.'):
+            print "\033[0;37m" + line + "\033[0;0m"
+          elif strip.startswith('at au.gov.nla.'):
+            print "\033[1;36m" + line + "\033[0;0m"
+          else:
+            print "\033[1;37m" + line + "\033[0;0m"
+  print
